@@ -7,5 +7,9 @@ function getEnvVar(name: string): string {
 }
 
 export const config = {
-  ynabToken: getEnvVar('YNAB_TOKEN')
+  ynabToken: getEnvVar('YNAB_TOKEN'),
+  wfUrl: getEnvVar('WF_URL'),
+  wfUsername: getEnvVar('WF_USERNAME'),
+  wfPassword: getEnvVar('WF_PASSWORD'),
+  captchaToken: getEnvVar('2CAPTCHA_TOKEN')
 };
