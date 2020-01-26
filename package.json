@@ -10,7 +10,8 @@
     "dev": "ts-node -r dotenv/config ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
-    "ts-node": "ts-node"
+    "ts-node": "ts-node",
+    "debug": "npm run build && node -r dotenv/config --nolazy --inspect-brk=9229 ./dist/index.js"
   },
   "dependencies": {
     "@infosimples/node_two_captcha": "^1.0.2",
