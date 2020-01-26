@@ -1,4 +1,4 @@
-import { getPendingTransactions } from './wf-api';
+import { getPendingTransactions } from './wf';
 
 (async () => {
   await getPendingTransactions();

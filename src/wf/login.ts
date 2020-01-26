@@ -1,31 +1,8 @@
-import { Page } from 'puppeteer'
-import puppeteer from 'puppeteer-extra'
-import StealthPlugin from 'puppeteer-extra-plugin-stealth'
-import { config } from './config';
-import { solveImageCaptcha } from './2captcha-api';
-
-puppeteer.use(StealthPlugin());
-
-export interface WFTransaction {
-  date: string;
-  description: string;
-  amount: string;
-}
-
-export async function getPendingTransactions(): Promise<WFTransaction[]> {
-  const browser = await puppeteer.launch({
-    headless: true, defaultViewport: null
-  });
-  const page = await browser.newPage();
-
-  await login(page);
-
-  await browser.close();
-
-  return [];
-};
-
-async function login(page: Page) {
+ import { Page } from 'puppeteer';
+ import { config } from '../config';
+ import { solveImageCaptcha } from '../2captcha-api';
+ 
+ export async function login(page: Page) {
   console.log('Logging in to WF...');
 
   await page.goto(config.wfUrl);
