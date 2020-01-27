@@ -44,7 +44,8 @@ async function fillOutSecondLoginCredentials(page: Page) {
 async function solveCaptcha(page: Page): Promise<boolean> {
   console.log('Attempting captcha...');
 
-  await page.waitFor(1000);
+  await page.waitForSelector('canvas');
+  await page.waitFor(1000); // Let the image move around a little bit
   const dataUrl = await page.evaluate('document.querySelector("canvas").toDataURL()');
   if (typeof dataUrl !== 'string') {
     throw new Error('Invalid data url!');
@@ -62,8 +63,7 @@ async function submitSecondLogin(page: Page) {
 }
 
 async function clickSubmitButton(page: Page, selector: string) {
-  const clickOptions: any = { waitUntil: 'domcontentloaded' };
-  await page.click(selector, clickOptions);
+  await page.click(selector, { waitUntil: 'domcontentloaded' } as any);
 }
 
 async function loginWasSuccessful(page: Page) {

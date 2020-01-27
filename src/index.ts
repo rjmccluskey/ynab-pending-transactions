@@ -1,7 +1,7 @@
 import { Browser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { login, getPendingTransactions, WfTransaction } from './wf';
+import { login, getPendingTransactions, WfTransactions } from './wf';
 
 puppeteer.use(StealthPlugin());
 
@@ -21,7 +21,7 @@ async function handleError(e: Error) {
   process.exitCode = 1;
 }
 
-async function scrapeWfPendingTransactions(): Promise<WfTransaction[]> {
+async function scrapeWfPendingTransactions(): Promise<WfTransactions> {
   browser = await puppeteer.launch({
     headless: true, defaultViewport: null
   });
