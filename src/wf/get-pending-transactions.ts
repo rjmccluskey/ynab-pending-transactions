@@ -5,9 +5,16 @@ export interface WfTransactions {
 }
 
 export interface WfTransaction {
+  /**
+   * ISO "full date" format: (YYYY-MM-dd)
+   */
   date: string;
   description: string;
-  amount: string;
+  /**
+   * Amount in milliunits
+   * ex: 12340 ($12.340)
+   */
+  amount: number;
 }
 
 export async function getPendingTransactions(page: Page): Promise<WfTransactions> {
@@ -48,9 +55,9 @@ async function getPendingCreditTransactions(page: Page,
   for (const row of transactionRows) {
     const cells = await row.$$('td');
     const [date, description, amount] = await Promise.all([
-      getTextContent(cells[0]),
+      getTransactionDate(cells[0]),
       getTransactionDescription(cells[1]),
-      getTextContent(cells[2])
+      getTransactionAmount(cells[2])
     ]);
     transactions.push({ date, description, amount });
   }
@@ -60,12 +67,27 @@ async function getPendingCreditTransactions(page: Page,
   return transactions;
 }
 
+async function getTransactionDate(cell: ElementHandle): Promise<string> {
+  const rawDate = await getTextContent(cell);
+  const parts = rawDate.split('/');
+  return `20${parts[2]}-${parts[0]}-${parts[1]}`;
+}
+
 async function getTransactionDescription(cell: ElementHandle): Promise<string> {
   const descriptionHandle = await cell.$('span');
   if (descriptionHandle === null) {
     throw new Error('Unable to find transaction description!');
   }
   return await getTextContent(descriptionHandle);
+}
+
+async function getTransactionAmount(cell: ElementHandle): Promise<number> {
+  const rawAmount = await getTextContent(cell);
+  let milliunitAmount = rawAmount.replace(/[^+\d]/g, '') + '0';
+  if (milliunitAmount[0] !== '+') {
+    milliunitAmount = `-${milliunitAmount}`;
+  }
+  return parseInt(milliunitAmount, 10);
 }
 
 async function getTextContent(handle: ElementHandle): Promise<string> {
