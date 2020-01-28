@@ -42,13 +42,9 @@ export async function getPendingTransactions(page: Page): Promise<WfTransactions
 };
 
 async function getPendingCreditTransactions(page: Page,
-                                                handle: ElementHandle): Promise<WfTransaction[]> {
+                                            handle: ElementHandle): Promise<WfTransaction[]> {
   await handle.click();
-  const expandPendingSelector = '.expand-collapse-link.temp-auth-ec';
-  await page.waitForSelector(expandPendingSelector);
-  await page.waitFor(1000); // Need to wait a little extra before it's clickable
-  await page.click(expandPendingSelector);
-  await page.waitForSelector('.temporary-authorizations table', { visible: true });
+  await expandPendingTransactions(page);
   const transactionRows = await page.$$('.temporary-authorizations tr.OneLinkNoTx');
 
   const transactions: WfTransaction[] = [];
@@ -65,6 +61,23 @@ async function getPendingCreditTransactions(page: Page,
   await page.goBack({ waitUntil: ['domcontentloaded', 'networkidle0'] });
 
   return transactions;
+}
+
+async function expandPendingTransactions(page: Page) {
+  const expandPendingSelector = '.expand-collapse-link.temp-auth-ec';
+  await page.waitForSelector(expandPendingSelector);
+  await page.waitFor(1000); // Need to wait a little extra before it's clickable
+  await page.click(expandPendingSelector);
+
+  const expandedTransactionsSelector = '.temporary-authorizations table';
+  const expandedTransactionsOptions = { visible: true, timeout: 10000 };
+  try {
+    await page.waitForSelector(expandedTransactionsSelector, expandedTransactionsOptions);
+  } catch (e) {
+    // Sometimes a modal pops up on the account page and the click
+    // removes the modal instead of expanding the transactions so try again
+    await page.waitForSelector(expandedTransactionsSelector, expandedTransactionsOptions);
+  }
 }
 
 async function getTransactionDate(cell: ElementHandle): Promise<string> {
