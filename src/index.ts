@@ -4,16 +4,15 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { login, getPendingTransactions, WfTransactions } from './wf';
 import { API, Account, SaveTransaction } from 'ynab';
 import { config } from './config';
+import { handledAsync } from './utils';
 
 puppeteer.use(StealthPlugin());
 const ynab = new API(config.ynabToken);
 
-(async () => {
-  
+export const main = handledAsync(async () => {
   const transactions = await scrapeWfPendingTransactions();
   await uploadTransactionsToYnab(transactions);
-
-})().catch(handleError);
+}, handleError);
 
 let browser: Browser|null;
 
@@ -27,7 +26,11 @@ async function handleError(e: Error) {
 
 async function scrapeWfPendingTransactions(): Promise<WfTransactions> {
   browser = await puppeteer.launch({
-    headless: true, defaultViewport: null
+    headless: true,
+    defaultViewport: null,
+    args: [
+      '--no-sandbox',
+    ]
   });
   const page = await browser.newPage();
   

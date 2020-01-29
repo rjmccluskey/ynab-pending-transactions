@@ -11,5 +11,5 @@ export const config = {
   wfUrl: getEnvVar('WF_URL'),
   wfUsername: getEnvVar('WF_USERNAME'),
   wfPassword: getEnvVar('WF_PASSWORD'),
-  captchaToken: getEnvVar('2CAPTCHA_TOKEN')
+  captchaToken: getEnvVar('CAPTCHA_TOKEN')
 };
