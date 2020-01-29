@@ -55,7 +55,9 @@ async function getPendingCreditTransactions(page: Page,
       getTransactionDescription(cells[1]),
       getTransactionAmount(cells[2])
     ]);
-    transactions.push({ date, description, amount });
+    if (amount !== 0) {
+      transactions.push({ date, description, amount });
+    }
   }
 
   await page.goBack({ waitUntil: ['domcontentloaded', 'networkidle0'] });
