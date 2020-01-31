@@ -20,8 +20,7 @@ async function handleError(e: Error) {
   if (browser) {
     await browser.close();
   }
-  console.error(e.stack);
-  process.exitCode = 1;
+  throw e;
 }
 
 async function scrapeWfPendingTransactions(): Promise<WfTransactions> {
