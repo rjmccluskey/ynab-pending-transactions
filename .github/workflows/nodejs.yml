@@ -17,5 +17,20 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Setup gcloud
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
     - run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci
     - run: npm run pre-deploy
+    - run: |
+        gcloud functions deploy ${{ secrets.GCP_FUNCTION }} \
+          --project=${{ secrets.GCP_PROJECT }} \
+          --region=${{ secrets.GCP_REGION }} \
+          --entry-point=main \
+          --source=dist/ \
+          --stage-bucket=${{ secrets.GCP_STAGE_BUCKET }} \
+          > /dev/null
+      if: github.ref == 'refs/heads/master'
