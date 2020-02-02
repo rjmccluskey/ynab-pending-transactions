@@ -24,26 +24,46 @@ export async function getPendingTransactions(page: Page): Promise<WfTransactions
   // Waiting for network idle and dom content loaded doesn't work
   await page.waitFor(5000);
 
-  const allTransactions: WfTransactions = {};
-
-  const creditAccountsSelector = '#Credit-account-group .account-name';
-  const countCreditAccounts = await page.$$eval(creditAccountsSelector, elements => elements.length);
-  for (let i = 0; i < countCreditAccounts; i++) {
-    await page.waitForSelector(creditAccountsSelector);
-    const accounts = await page.$$(creditAccountsSelector);
-    const accountName = await getTextContent(accounts[i]);
-    console.log(`Searching account: ${accountName}...`);
-    const transactions = await getPendingCreditTransactions(page, accounts[i]);
-    allTransactions[accountName] = transactions;
-    console.log(`Found ${transactions.length} pending transactions.`)
-  }
+  const allTransactions: WfTransactions = {
+    ...await getPendingTransactionsByAccount(
+      page,
+      '#Credit-account-group .account-name',
+      getPendingCreditTransactions
+    )
+  };
 
   return allTransactions;
 };
 
-async function getPendingCreditTransactions(page: Page,
-                                            handle: ElementHandle): Promise<WfTransaction[]> {
-  await handle.click();
+interface GetTransactions {
+  (page: Page): Promise<WfTransaction[]>
+}
+
+async function getPendingTransactionsByAccount(page: Page,
+                                               accountSelector: string,
+                                               getTransactions: GetTransactions): Promise<WfTransactions> {
+  const transactionsByAccount: WfTransactions = {};
+
+  const countCreditAccounts = await page.$$eval(accountSelector, elements => elements.length);
+  for (let i = 0; i < countCreditAccounts; i++) {
+    await page.waitForSelector(accountSelector);
+    const accounts = await page.$$(accountSelector);
+    const thisAccount = accounts[i];
+    const accountName = await getTextContent(thisAccount);
+
+    console.log(`Searching account: ${accountName}...`);
+    await thisAccount.click();
+    const transactions = await getTransactions(page);
+    transactionsByAccount[accountName] = transactions;
+    console.log(`Found ${transactions.length} pending transactions.`);
+
+    await page.goBack({ waitUntil: ['domcontentloaded', 'networkidle0'] });
+  }
+
+  return transactionsByAccount;
+}
+
+const getPendingCreditTransactions: GetTransactions = async(page) => {
   await expandPendingTransactions(page);
   const transactionRows = await page.$$('.temporary-authorizations tr.OneLinkNoTx');
 
@@ -59,8 +79,6 @@ async function getPendingCreditTransactions(page: Page,
       transactions.push({ date, description, amount });
     }
   }
-
-  await page.goBack({ waitUntil: ['domcontentloaded', 'networkidle0'] });
 
   return transactions;
 }
