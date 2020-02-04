@@ -1,20 +1,8 @@
 import { Page, ElementHandle } from 'puppeteer';
+import { Transaction } from '../shared';
 
 export interface WfTransactions {
-  [accountName: string]: WfTransaction[];
-}
-
-export interface WfTransaction {
-  /**
-   * ISO "full date" format: (YYYY-MM-dd)
-   */
-  date: string;
-  description: string;
-  /**
-   * Amount in milliunits
-   * ex: 12340 ($12.340)
-   */
-  amount: number;
+  [accountName: string]: Transaction[];
 }
 
 export async function getPendingTransactions(page: Page): Promise<WfTransactions> {
@@ -42,12 +30,12 @@ export async function getPendingTransactions(page: Page): Promise<WfTransactions
 };
 
 async function getPendingCreditTransactions(page: Page,
-                                            handle: ElementHandle): Promise<WfTransaction[]> {
+                                            handle: ElementHandle): Promise<Transaction[]> {
   await handle.click();
   await expandPendingTransactions(page);
   const transactionRows = await page.$$('.temporary-authorizations tr.OneLinkNoTx');
 
-  const transactions: WfTransaction[] = [];
+  const transactions: Transaction[] = [];
   for (const row of transactionRows) {
     const cells = await row.$$('td');
     const [date, description, amount] = await Promise.all([
@@ -56,7 +44,7 @@ async function getPendingCreditTransactions(page: Page,
       getTransactionAmount(cells[2])
     ]);
     if (amount !== 0) {
-      transactions.push({ date, description, amount });
+      transactions.push(new Transaction(amount, date, description));
     }
   }
 

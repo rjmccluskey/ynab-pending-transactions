@@ -63,17 +63,17 @@ async function uploadTransactionsToYnab(transactions: WfTransactions) {
           transaction.cleared === SaveTransaction.ClearedEnum.Uncleared);
 
         const newTransactions: SaveTransaction[] = [];
-        for (const wfTransaction of pendingTransactions) {
+        for (const pendingTransaction of pendingTransactions) {
           const existingTransaction = ynabTransactions.find(ynabTransaction =>
-            ynabTransaction.payee_name === wfTransaction.description
-            && ynabTransaction.amount === wfTransaction.amount);
+            pendingTransaction.matchesId(ynabTransaction.memo));
           if (!existingTransaction) {
             newTransactions.push({
               account_id: account.id,
-              date: wfTransaction.date,
-              amount: wfTransaction.amount,
-              payee_name: wfTransaction.description,
-              cleared: SaveTransaction.ClearedEnum.Uncleared
+              date: pendingTransaction.date,
+              amount: pendingTransaction.amount,
+              payee_name: pendingTransaction.description,
+              cleared: SaveTransaction.ClearedEnum.Uncleared,
+              memo: pendingTransaction.getId()
             });
           }
         }
