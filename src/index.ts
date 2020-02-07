@@ -9,10 +9,12 @@ import { handledAsync, retryable } from './utils';
 puppeteer.use(StealthPlugin());
 const ynab = new API(config.ynabToken);
 
-export const main = retryable(handledAsync(async () => {
-  const transactions = await scrapeWfPendingTransactions();
-  await uploadTransactionsToYnab(transactions);
-}, handleError));
+export const main = retryable(
+  handledAsync(async () => {
+    const transactions = await scrapeWfPendingTransactions();
+    await uploadTransactionsToYnab(transactions);
+  }, handleError)
+);
 
 let browser: Browser|null;
 

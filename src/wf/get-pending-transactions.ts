@@ -12,15 +12,18 @@ export async function getPendingTransactions(page: Page): Promise<WfTransactions
   // Waiting for network idle and dom content loaded doesn't work
   await page.waitFor(5000);
 
-  const allTransactions: WfTransactions = {
-    ...await getPendingTransactionsByAccount(
-      page,
-      '#Credit-account-group .account-name',
-      getPendingCreditTransactions
-    )
-  };
+  const creditTransactions = await getPendingTransactionsByAccount(
+    page,
+    '#Credit-account-group .account-name',
+    getPendingCreditTransactions
+  );
+  const cashTransactions = await getPendingTransactionsByAccount(
+    page,
+    '#Cash-account-group .account-name',
+    getPendingCashTransactions
+  );
 
-  return allTransactions;
+  return { ...creditTransactions, ...cashTransactions };
 };
 
 interface GetTransactions {
@@ -32,9 +35,8 @@ async function getPendingTransactionsByAccount(page: Page,
                                                getTransactions: GetTransactions): Promise<WfTransactions> {
   const transactionsByAccount: WfTransactions = {};
 
-  const countCreditAccounts = await page.$$eval(accountSelector, elements => elements.length);
-  for (let i = 0; i < countCreditAccounts; i++) {
-    await page.waitForSelector(accountSelector);
+  const countAccounts = await page.$$eval(accountSelector, elements => elements.length);
+  for (let i = 0; i < countAccounts; i++) {
     const accounts = await page.$$(accountSelector);
     const thisAccount = accounts[i];
     const accountName = await getTextContent(thisAccount);
@@ -46,12 +48,13 @@ async function getPendingTransactionsByAccount(page: Page,
     console.log(`Found ${transactions.length} pending transactions.`);
 
     await page.goBack({ waitUntil: ['domcontentloaded', 'networkidle0'] });
+    await page.waitForSelector(accountSelector);
   }
 
   return transactionsByAccount;
 }
 
-const getPendingCreditTransactions: GetTransactions = async(page) => {
+const getPendingCreditTransactions: GetTransactions = async page => {
   await expandPendingTransactions(page);
   const transactionRows = await page.$$('.temporary-authorizations tr.OneLinkNoTx');
 
@@ -61,7 +64,7 @@ const getPendingCreditTransactions: GetTransactions = async(page) => {
     const [date, description, amount] = await Promise.all([
       getTransactionDate(cells[0]),
       getTransactionDescription(cells[1]),
-      getTransactionAmount(cells[2])
+      getCreditAccountAmount(cells[2])
     ]);
     if (amount !== 0) {
       transactions.push(new Transaction(amount, date, description));
@@ -69,7 +72,33 @@ const getPendingCreditTransactions: GetTransactions = async(page) => {
   }
 
   return transactions;
-}
+};
+
+const getPendingCashTransactions: GetTransactions = async page => {
+  const transactionRowsSelector = 'tr.detailed-transaction';
+  await page.waitForSelector(transactionRowsSelector);
+  const transactionRows = await page.$$(transactionRowsSelector);
+  const transactions: Transaction[] = [];
+
+  for (const row of transactionRows) {
+    const cells = await row.$$('td[headers~="pending-trans"]');
+    if (cells.length === 0) {
+      continue;
+    }
+    const [date, description, creditAmount, debitAmount] = await Promise.all([
+      getTransactionDate(cells[1]),
+      getTransactionDescription(cells[2]),
+      getCashAccountAmount(cells[3]),
+      getCashAccountAmount(cells[4])
+    ]);
+    const amount = creditAmount || (debitAmount * -1);
+    if (amount !== 0) {
+      transactions.push(new Transaction(amount, date, description ));
+    }
+  }
+
+  return transactions;
+};
 
 async function expandPendingTransactions(page: Page) {
   const expandPendingSelector = '.expand-collapse-link.temp-auth-ec';
@@ -102,13 +131,23 @@ async function getTransactionDescription(cell: ElementHandle): Promise<string> {
   return await getTextContent(descriptionHandle);
 }
 
-async function getTransactionAmount(cell: ElementHandle): Promise<number> {
-  const rawAmount = await getTextContent(cell);
-  let milliunitAmount = rawAmount.replace(/[^+\d]/g, '') + '0';
+async function getCreditAccountAmount(cell: ElementHandle): Promise<number> {
+  let milliunitAmount = await getMilliunitString(cell);
   if (milliunitAmount[0] !== '+') {
     milliunitAmount = `-${milliunitAmount}`;
   }
   return parseInt(milliunitAmount, 10);
+}
+
+async function getCashAccountAmount(cell: ElementHandle): Promise<number> {
+  const milliunitAmount = await getMilliunitString(cell);
+  return parseInt(milliunitAmount, 10);
+}
+
+async function getMilliunitString(cell: ElementHandle): Promise<string> {
+  const rawAmount = await getTextContent(cell);
+  const milliunitAmount = rawAmount.replace(/[^+\d]/g, '') + '0';
+  return milliunitAmount;
 }
 
 async function getTextContent(handle: ElementHandle): Promise<string> {
