@@ -24,6 +24,7 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
 
     - run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci
+    - run: npm run lint
     - run: npm run pre-deploy
     - run: |
         gcloud functions deploy ${{ secrets.GCP_FUNCTION }} \

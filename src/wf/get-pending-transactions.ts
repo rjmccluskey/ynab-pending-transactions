@@ -24,10 +24,10 @@ export async function getPendingTransactions(page: Page): Promise<WfTransactions
   );
 
   return { ...creditTransactions, ...cashTransactions };
-};
+}
 
 interface GetTransactions {
-  (page: Page): Promise<Transaction[]>
+  (page: Page): Promise<Transaction[]>;
 }
 
 async function getPendingTransactionsByAccount(page: Page,
@@ -100,7 +100,7 @@ const getPendingCashTransactions: GetTransactions = async page => {
   return transactions;
 };
 
-async function expandPendingTransactions(page: Page) {
+async function expandPendingTransactions(page: Page): Promise<void> {
   const expandPendingSelector = '.expand-collapse-link.temp-auth-ec';
   await page.waitForSelector(expandPendingSelector);
   await page.waitFor(1000); // Need to wait a little extra before it's clickable

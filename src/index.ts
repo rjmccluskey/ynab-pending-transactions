@@ -18,7 +18,7 @@ export const main = retryable(
 
 let browser: Browser|null;
 
-async function handleError(e: Error) {
+async function handleError(e: Error): Promise<void> {
   if (browser) {
     await browser.close();
   }
@@ -43,7 +43,7 @@ async function scrapeWfPendingTransactions(): Promise<WfTransactions> {
   return transactions;
 }
 
-async function uploadTransactionsToYnab(transactions: WfTransactions) {
+async function uploadTransactionsToYnab(transactions: WfTransactions): Promise<void> {
   const accountsByBudget: { [budgetId: string]: Account[] } = {};
   const budgetsResponse = await ynab.budgets.getBudgets();
   for (const budget of budgetsResponse.data.budgets) {

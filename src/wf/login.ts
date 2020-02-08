@@ -2,7 +2,7 @@
  import { config } from '../config';
  import { solveImageCaptcha } from '../2captcha-api';
  
- export async function login(page: Page) {
+ export async function login(page: Page): Promise<void> {
   console.log('Logging in to WF...');
 
   await page.goto(config.wfUrl);
@@ -17,7 +17,7 @@
   console.log('Successfully logged in!');
 }
 
-async function attemptCaptchaLogin(page: Page) {
+async function attemptCaptchaLogin(page: Page): Promise<void> {
   console.log('Login requires captcha...');
 
   await fillOutSecondLoginCredentials(page);
@@ -35,7 +35,7 @@ async function attemptCaptchaLogin(page: Page) {
   }
 }
 
-async function fillOutSecondLoginCredentials(page: Page) {
+async function fillOutSecondLoginCredentials(page: Page): Promise<void> {
   await page.waitForSelector('#j_username');
   await page.type('#j_username', config.wfUsername);
   await page.type('#j_password', config.wfPassword);
@@ -58,15 +58,15 @@ async function solveCaptcha(page: Page): Promise<boolean> {
   return await loginWasSuccessful(page);
 }
 
-async function submitSecondLogin(page: Page) {
+async function submitSecondLogin(page: Page): Promise<void> {
   await clickSubmitButton(page, 'input[type="submit"]');
 }
 
-async function clickSubmitButton(page: Page, selector: string) {
+async function clickSubmitButton(page: Page, selector: string): Promise<void> {
   await page.click(selector, { waitUntil: 'domcontentloaded' } as any);
 }
 
-async function loginWasSuccessful(page: Page) {
+async function loginWasSuccessful(page: Page): Promise<boolean> {
   const wasSuccessful = await page.$('#mwf-customer-nav-sign-off') !== null;
   console.log(`Login attempt result: ${wasSuccessful}`);
   return wasSuccessful;
