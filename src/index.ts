@@ -1,10 +1,11 @@
 import { Browser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { login, getPendingTransactions, WfTransactions } from './wf';
+import { login, getPendingTransactions } from './wf';
 import { API, Account, SaveTransaction } from 'ynab';
 import { config } from './config';
 import { handledAsync, retryable } from './utils';
+import { TransactionsByAccount } from './shared';
 
 puppeteer.use(StealthPlugin());
 const ynab = new API(config.ynabToken);
@@ -25,7 +26,7 @@ async function handleError(e: Error): Promise<void> {
   throw e;
 }
 
-async function scrapeWfPendingTransactions(): Promise<WfTransactions> {
+async function scrapeWfPendingTransactions(): Promise<TransactionsByAccount> {
   browser = await puppeteer.launch({
     headless: true,
     defaultViewport: null,
@@ -43,7 +44,7 @@ async function scrapeWfPendingTransactions(): Promise<WfTransactions> {
   return transactions;
 }
 
-async function uploadTransactionsToYnab(transactions: WfTransactions): Promise<void> {
+async function uploadTransactionsToYnab(transactions: TransactionsByAccount): Promise<void> {
   const accountsByBudget: { [budgetId: string]: Account[] } = {};
   const budgetsResponse = await ynab.budgets.getBudgets();
   for (const budget of budgetsResponse.data.budgets) {

@@ -1,11 +1,7 @@
 import { Page, ElementHandle } from 'puppeteer';
-import { Transaction } from '../shared';
+import { Transaction, TransactionsByAccount } from '../shared';
 
-export interface WfTransactions {
-  [accountName: string]: Transaction[];
-}
-
-export async function getPendingTransactions(page: Page): Promise<WfTransactions> {
+export async function getPendingTransactions(page: Page): Promise<TransactionsByAccount> {
   console.log('Collecting pending transactions...');
 
   // Need to wait so we can click on the accounts
@@ -32,8 +28,8 @@ interface GetTransactions {
 
 async function getPendingTransactionsByAccount(page: Page,
                                                accountSelector: string,
-                                               getTransactions: GetTransactions): Promise<WfTransactions> {
-  const transactionsByAccount: WfTransactions = {};
+                                               getTransactions: GetTransactions): Promise<TransactionsByAccount> {
+  const transactionsByAccount: TransactionsByAccount = {};
 
   const countAccounts = await page.$$eval(accountSelector, elements => elements.length);
   for (let i = 0; i < countAccounts; i++) {
