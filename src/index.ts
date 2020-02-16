@@ -3,19 +3,23 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { login, getPendingTransactions } from './wf';
 import { API, Account, SaveTransaction } from 'ynab';
-import { config } from './config';
+import { config, NodeEnv } from './config';
 import { handledAsync, retryable } from './utils';
 import { TransactionsByAccount } from './shared';
 
 puppeteer.use(StealthPlugin());
 const ynab = new API(config.ynabToken);
 
-export const main = retryable(
-  handledAsync(async () => {
+let findAndUploadTransactions = handledAsync(async () => {
     const transactions = await scrapeWfPendingTransactions();
     await uploadTransactionsToYnab(transactions);
-  }, handleError)
-);
+}, handleError);
+
+if (config.nodeEnv === NodeEnv.prod) {
+  findAndUploadTransactions = retryable(findAndUploadTransactions);
+}
+
+export const main = findAndUploadTransactions;
 
 let browser: Browser|null;
 
