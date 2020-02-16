@@ -1,12 +1,13 @@
 import { API, Account, SaveTransaction } from 'ynab';
 import { TransactionsByAccount } from '../shared';
+import { ynabErrorWrapper } from './';
 
 export async function uploadTransactionsToYnab(ynab: API,
                                                transactions: TransactionsByAccount): Promise<void> {
   const accountsByBudget: { [budgetId: string]: Account[] } = {};
-  const budgetsResponse = await ynab.budgets.getBudgets();
+  const budgetsResponse = await ynab.budgets.getBudgets().catch(ynabErrorWrapper);
   for (const budget of budgetsResponse.data.budgets) {
-    const accountsResponse = await ynab.accounts.getAccounts(budget.id);
+    const accountsResponse = await ynab.accounts.getAccounts(budget.id).catch(ynabErrorWrapper);
     accountsByBudget[budget.id] = accountsResponse.data.accounts;
   }
 
@@ -43,7 +44,7 @@ export async function uploadTransactionsToYnab(ynab: API,
           console.log('Uploading transactions to YNAB...');
           await ynab.transactions.createTransactions(budgetId, {
             transactions: newTransactions
-          });
+          }).catch(ynabErrorWrapper);
         }
       }
     }
