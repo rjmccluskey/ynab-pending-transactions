@@ -17,11 +17,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Setup gcloud
-      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-      with:
-        service_account_email: ${{ secrets.GCP_SA_EMAIL }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
 
     - run: npm ci
       env:
@@ -32,6 +27,12 @@ jobs:
       env:
         NODE_ENV: CI
 
+    - name: Setup gcloud
+      if: github.ref == 'refs/heads/master'
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
     - run: |
         gcloud functions deploy ${{ secrets.GCP_FUNCTION }} \
           --project=${{ secrets.GCP_PROJECT }} \
