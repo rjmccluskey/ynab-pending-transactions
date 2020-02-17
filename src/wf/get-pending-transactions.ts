@@ -62,7 +62,7 @@ const getPendingCreditTransactions: GetTransactions = async page => {
       getTransactionDescription(cells[1]),
       getCreditAccountAmount(cells[2])
     ]);
-    if (amount !== 0) {
+    if (amountIsValid(amount) && !isATransfer(description)) {
       transactions.push(new Transaction(amount, date, description));
     }
   }
@@ -88,7 +88,7 @@ const getPendingCashTransactions: GetTransactions = async page => {
       getCashAccountAmount(cells[4])
     ]);
     const amount = creditAmount || (debitAmount * -1);
-    if (amount !== 0) {
+    if (amountIsValid(amount) && !isATransfer(description)) {
       transactions.push(new Transaction(amount, date, description ));
     }
   }
@@ -152,4 +152,18 @@ async function getTextContent(handle: ElementHandle): Promise<string> {
     throw new Error('Element handle has no text!');
   }
   return text.trim();
+}
+
+/**
+ * A "valid" amount is an amount that is not a temporary verification
+ * but an actual transaction that will eventually be cleared.
+ * Best guess is that the absolute amount is greater than $1.00
+ */
+function amountIsValid(amount: number): boolean {
+  return Math.abs(amount) > 1;
+}
+
+function isATransfer(description: string): boolean {
+  const match = description.match(/(online|recurring)\stransfer\s(to|from)/i);
+  return match !== null;
 }
