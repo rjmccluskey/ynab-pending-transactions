@@ -34,3 +34,7 @@ export class Transaction {
     return Array.isArray(matches) && matches[0] === this.getId();
   }
 }
+
+export interface TransactionsByAccount {
+  [accountName: string]: Transaction[];
+}

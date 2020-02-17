@@ -1,1 +1,1 @@
-export { Transaction } from './transaction';
+export { Transaction, TransactionsByAccount } from './transaction';

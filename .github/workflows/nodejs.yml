@@ -17,15 +17,22 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+
+    - run: npm ci
+      env:
+        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
+    - run: npm run lint
+    - run: npm run build
+    - run: npm run test
+      env:
+        NODE_ENV: CI
+
     - name: Setup gcloud
+      if: github.ref == 'refs/heads/master'
       uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
         service_account_email: ${{ secrets.GCP_SA_EMAIL }}
         service_account_key: ${{ secrets.GCP_SA_KEY }}
-
-    - run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci
-    - run: npm run lint
-    - run: npm run pre-deploy
     - run: |
         gcloud functions deploy ${{ secrets.GCP_FUNCTION }} \
           --project=${{ secrets.GCP_PROJECT }} \
