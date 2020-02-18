@@ -159,8 +159,8 @@ async function getTextContent(handle: ElementHandle): Promise<string> {
  * but an actual transaction that will eventually be cleared.
  * Best guess is that the absolute amount is greater than $1.00
  */
-function amountIsValid(amount: number): boolean {
-  return Math.abs(amount) > 1;
+function amountIsValid(milliunitAmount: number): boolean {
+  return Math.abs(milliunitAmount) > 1000;
 }
 
 function isATransfer(description: string): boolean {
