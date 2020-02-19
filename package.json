@@ -1,7 +1,6 @@
 {
   "name": "ynab-pending-transactions",
   "version": "1.0.0",
-  "type": "module",
   "description": "Import pending transactions to YNAB (You Need a Budget)",
   "repository": {
     "type": "git",
