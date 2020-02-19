@@ -4,18 +4,20 @@ import { Transaction, TransactionsByAccount } from '../shared';
 export async function getPendingTransactions(page: Page): Promise<TransactionsByAccount> {
   console.log('Collecting pending transactions...');
 
-  const [creditTransactions, cashTransactions] = await Promise.all([
-    getPendingTransactionsByAccount(
-      page,
-      '#Credit-account-group .account-name',
-      getPendingCreditTransactions
-    ),
-    getPendingTransactionsByAccount(
-      page,
-      '#Cash-account-group .account-name',
-      getPendingCashTransactions
-    )
-  ]);
+  // Need to wait so we can click on the accounts
+  // Waiting for network idle and dom content loaded doesn't work
+  await page.waitFor(5000);
+
+  const creditTransactions = await getPendingTransactionsByAccount(
+    page,
+    '#Credit-account-group .account-name',
+    getPendingCreditTransactions
+  );
+  const cashTransactions = await getPendingTransactionsByAccount(
+    page,
+    '#Cash-account-group .account-name',
+    getPendingCashTransactions
+  );
 
   return { ...creditTransactions, ...cashTransactions };
 }
@@ -29,26 +31,21 @@ async function getPendingTransactionsByAccount(page: Page,
                                                getTransactions: GetTransactions): Promise<TransactionsByAccount> {
   const transactionsByAccount: TransactionsByAccount = {};
 
-  await page.waitForSelector(accountSelector);
-
-  const promises = (await page.$$(accountSelector)).map(async (_, i) => {
-    const newPage = await page.browser().newPage();
-    await newPage.goto(page.url(), { waitUntil: 'networkidle2' });
-
-    await newPage.waitForSelector(accountSelector);
-    const accounts = await newPage.$$(accountSelector);
+  const countAccounts = await page.$$eval(accountSelector, elements => elements.length);
+  for (let i = 0; i < countAccounts; i++) {
+    const accounts = await page.$$(accountSelector);
     const thisAccount = accounts[i];
     const accountName = await getTextContent(thisAccount);
 
+    console.log(`Searching account: ${accountName}...`);
     await thisAccount.click();
-    const transactions = await getTransactions(newPage);
+    const transactions = await getTransactions(page);
     transactionsByAccount[accountName] = transactions;
-    console.log(`Found ${transactions.length} pending transactions in ${accountName}.`);
+    console.log(`Found ${transactions.length} pending transactions.`);
 
-    await newPage.close();
-  });
-
-  await Promise.all(promises);
+    await page.goBack({ waitUntil: ['domcontentloaded', 'networkidle0'] });
+    await page.waitForSelector(accountSelector);
+  }
 
   return transactionsByAccount;
 }
