@@ -55,7 +55,8 @@ async function uploadTransactionsToAccount(ynab: API,
     for (const pendingTransaction of pendingTransactions) {
       const existingTransaction = ynabTransactions.find(ynabTransaction =>
         pendingTransaction.matchesId(ynabTransaction.memo));
-      if (!existingTransaction) {
+      // Only upload new charges (negative amounts)
+      if (!existingTransaction && pendingTransaction.amount < 0) {
         newTransactions.push({
           account_id: account.id,
           date: pendingTransaction.date,
