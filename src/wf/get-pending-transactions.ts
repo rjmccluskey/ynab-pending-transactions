@@ -164,6 +164,6 @@ function amountIsValid(milliunitAmount: number): boolean {
 }
 
 function isATransfer(description: string): boolean {
-  const match = description.match(/(online|recurring)\stransfer\s(to|from)/i);
+  const match = description.match(/(online|recurring)\stransfer/i);
   return match !== null;
 }
