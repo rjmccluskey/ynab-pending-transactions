@@ -13,7 +13,7 @@
     "tsc": "tsc",
     "ts-node": "ts-node",
     "lint": "eslint . --ext .ts",
-    "test": "echo 'No tests yet!'",
+    "test": "jest",
     "dev": "ts-node -r dotenv/config -e 'require(\"./src/\").main()'",
     "debug": "tsc && node -r dotenv/config --nolazy --inspect-brk=9229 -e 'require(\"./dist/\").main()'",
     "clean": "rimraf ./dist/",
@@ -28,13 +28,16 @@
     "ynab": "^1.17.0"
   },
   "devDependencies": {
+    "@types/jest": "^25.1.3",
     "@types/node": "^13.1.8",
     "@types/puppeteer": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
     "dotenv": "^8.2.0",
     "eslint": "^6.8.0",
+    "jest": "^25.1.0",
     "rimraf": "^3.0.1",
+    "ts-jest": "^25.2.1",
     "ts-node": "^8.6.2",
     "typescript": "^3.7.5"
   }
