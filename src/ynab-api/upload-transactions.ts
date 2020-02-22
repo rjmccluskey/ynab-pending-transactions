@@ -57,9 +57,10 @@ async function uploadTransactionsToAccount(ynab: API,
         pendingTransaction.matchesId(ynabTransaction.memo));
       // Only upload new charges (negative amounts)
       if (!existingTransaction && pendingTransaction.amount < 0) {
+        const date = convertDate(pendingTransaction.date);
         newTransactions.push({
           account_id: account.id,
-          date: pendingTransaction.date,
+          date,
           amount: pendingTransaction.amount,
           payee_name: pendingTransaction.description,
           cleared: SaveTransaction.ClearedEnum.Uncleared,
@@ -75,4 +76,15 @@ async function uploadTransactionsToAccount(ynab: API,
       }).catch(ynabErrorWrapper);
     }
   }
+}
+
+/**
+ * @param date ISO date string (e.g. "2020-02-22")
+ */
+export function convertDate(date: string): string {
+  const today: string = (new Date()).toISOString().split('T')[0];
+  if (date > today) {
+    return today;
+  }
+  return date;
 }
