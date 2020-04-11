@@ -1,8 +1,9 @@
- import { Page } from 'puppeteer';
- import { config } from '../config';
- import { solveImageCaptcha } from '../2captcha-api';
+import { Page } from 'puppeteer';
+import { config } from '../config';
+import { solveImageCaptcha } from '../2captcha-api';
+import { safeWaitForSelector } from '../browser';
  
- export async function login(page: Page): Promise<void> {
+export async function login(page: Page): Promise<void> {
   console.log('Logging in to WF...');
 
   await page.goto(config.wfUrl);
@@ -10,29 +11,23 @@
   await page.type('#password', config.wfPassword);
   await clickSubmitButton(page, '#btnSignon');
 
-  if (!(await loginWasSuccessful(page))) {
-    await attemptCaptchaLogin(page);
+  const isLoggedIn = (await loginWasSuccessful(page))
+    || (await attemptSecondLogin(page));
+  if (!isLoggedIn) {
+    throw new Error('Unable to log in!');
   }
-
-  console.log('Successfully logged in!');
 }
 
-async function attemptCaptchaLogin(page: Page): Promise<void> {
-  console.log('Login requires captcha...');
-
+async function attemptSecondLogin(page: Page): Promise<boolean> {
+  console.log('Second login required');
   await fillOutSecondLoginCredentials(page);
-  let loginSuccessful = await solveCaptcha(page);
-  let count = 1;
-  while (loginSuccessful === false && count < 3) {
-    await fillOutSecondLoginCredentials(page);
+  const requiresCaptcha = await loginRequiresCaptcha(page);
+  if (requiresCaptcha) {
+    await solveCaptcha(page);
+  } else {
     await submitSecondLogin(page);
-    await fillOutSecondLoginCredentials(page);
-    loginSuccessful = await solveCaptcha(page);
-    count++;
   }
-  if (count === 3) {
-    throw new Error('Unable to login!');
-  }
+  return loginWasSuccessful(page);
 }
 
 async function fillOutSecondLoginCredentials(page: Page): Promise<void> {
@@ -41,10 +36,9 @@ async function fillOutSecondLoginCredentials(page: Page): Promise<void> {
   await page.type('#j_password', config.wfPassword);
 }
 
-async function solveCaptcha(page: Page): Promise<boolean> {
+async function solveCaptcha(page: Page): Promise<void> {
   console.log('Attempting captcha...');
 
-  await page.waitForSelector('canvas');
   await page.waitFor(1000); // Let the image move around a little bit
   const dataUrl = await page.evaluate('document.querySelector("canvas").toDataURL()');
   if (typeof dataUrl !== 'string') {
@@ -54,8 +48,6 @@ async function solveCaptcha(page: Page): Promise<boolean> {
   const captchaSolution = await solveImageCaptcha(dataUrl);
   await page.type('#nucaptcha-answer', captchaSolution);
   await submitSecondLogin(page);
-
-  return await loginWasSuccessful(page);
 }
 
 async function submitSecondLogin(page: Page): Promise<void> {
@@ -67,15 +59,15 @@ async function clickSubmitButton(page: Page, selector: string): Promise<void> {
 }
 
 async function loginWasSuccessful(page: Page): Promise<boolean> {
-  try {
-    await page.waitForSelector('#mwf-customer-nav-sign-off', {
-      timeout: 5000
-    });
-    return true;
-  } catch (error) {
-    if (error.toString().indexOf('TimeoutError') > -1) {
-      return false;
-    }
-    throw error;
+  const isLoggedIn = await safeWaitForSelector(page, '#mwf-customer-nav-sign-off');
+  console.log(`Login attempt: ${isLoggedIn}`);
+  return isLoggedIn;
+}
+
+async function loginRequiresCaptcha(page: Page): Promise<boolean> {
+  const pageHasCaptcha = await safeWaitForSelector(page, 'canvas');
+  if (pageHasCaptcha) {
+    console.log('Login requires captcha.');
   }
+  return pageHasCaptcha;
 }
