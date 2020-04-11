@@ -7,6 +7,7 @@ import { config, NodeEnv } from './config';
 import { handledAsync, retryable } from './utils';
 import { TransactionsByAccount } from './shared';
 import { uploadTransactionsToYnab } from './ynab-api';
+import { takeScreenshot } from './browser'
 
 puppeteer.use(StealthPlugin());
 const ynab = new API(config.ynabToken);
@@ -26,6 +27,10 @@ let browser: Browser|null;
 
 async function handleError(e: Error): Promise<void> {
   if (browser) {
+    const pages = await browser.pages();
+    await Promise.all(pages.slice(1).map((page, i) => 
+      takeScreenshot(page, `${i}-error-screenshot`)
+    ));
     await browser.close();
   }
   throw e;

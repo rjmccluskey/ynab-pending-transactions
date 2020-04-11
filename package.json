@@ -21,6 +21,7 @@
     "build": "npm run clean && tsc && npm run cp-package"
   },
   "dependencies": {
+    "@google-cloud/storage": "^4.7.0",
     "@infosimples/node_two_captcha": "^1.0.2",
     "puppeteer": "^2.0.0",
     "puppeteer-extra": "^3.1.9",

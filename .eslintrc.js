@@ -20,5 +20,6 @@ module.exports = {
       allowExpressions: true
     }],
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-empty-function': 'off',
   }
 };
