@@ -15,6 +15,7 @@ const ynab = new API(config.ynabToken);
 let findAndUploadTransactions = handledAsync(async () => {
     const transactions = await scrapeWfPendingTransactions();
     await uploadTransactionsToYnab(ynab, transactions);
+    return 'success';
 }, handleError);
 
 if (config.nodeEnv === NodeEnv.prod) {
@@ -25,7 +26,7 @@ export const main = findAndUploadTransactions;
 
 let browser: Browser|null;
 
-async function handleError(e: Error): Promise<void> {
+async function handleError(e: Error): Promise<string> {
   if (browser) {
     const pages = await browser.pages();
     await Promise.all(pages.slice(1).map((page, i) => 
