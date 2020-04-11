@@ -67,7 +67,15 @@ async function clickSubmitButton(page: Page, selector: string): Promise<void> {
 }
 
 async function loginWasSuccessful(page: Page): Promise<boolean> {
-  const wasSuccessful = await page.$('#mwf-customer-nav-sign-off') !== null;
-  console.log(`Login attempt result: ${wasSuccessful}`);
-  return wasSuccessful;
+  try {
+    await page.waitForSelector('#mwf-customer-nav-sign-off', {
+      timeout: 5000
+    });
+    return true;
+  } catch (error) {
+    if (error.toString().indexOf('TimeoutError') > -1) {
+      return false;
+    }
+    throw error;
+  }
 }
