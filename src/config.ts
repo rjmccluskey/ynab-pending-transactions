@@ -21,5 +21,7 @@ export const config = {
   wfUsername: getEnvVar('WF_USERNAME'),
   wfPassword: getEnvVar('WF_PASSWORD'),
   captchaToken: getEnvVar('CAPTCHA_TOKEN'),
-  nodeEnv: (getEnvVar('NODE_ENV', false) || NodeEnv.prod) as NodeEnv
+  nodeEnv: (getEnvVar('NODE_ENV', false) || NodeEnv.prod) as NodeEnv,
+  useTracing: getEnvVar('USE_TRACING', false) === 'true',
+  debugBucketName: getEnvVar('DEBUG_BUCKET_NAME', false)
 };

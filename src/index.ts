@@ -1,15 +1,11 @@
-import { Browser } from 'puppeteer';
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { login, getPendingTransactions } from './wf';
 import { API } from 'ynab';
 import { config, NodeEnv } from './config';
 import { handledAsync, retryable } from './utils';
 import { TransactionsByAccount } from './shared';
 import { uploadTransactionsToYnab } from './ynab-api';
-import { takeScreenshot } from './browser'
+import { takeScreenshot, createPage, closeBrowser, getPages } from './browser';
 
-puppeteer.use(StealthPlugin());
 const ynab = new API(config.ynabToken);
 
 let findAndUploadTransactions = handledAsync(async () => {
@@ -24,33 +20,22 @@ if (config.nodeEnv === NodeEnv.prod) {
 
 export const main = findAndUploadTransactions;
 
-let browser: Browser|null;
-
 async function handleError(e: Error): Promise<string> {
-  if (browser) {
-    const pages = await browser.pages();
-    await Promise.all(pages.slice(1).map((page, i) => 
-      takeScreenshot(page, `${i}-error-screenshot`)
-    ));
-    await browser.close();
-  }
+  const pages = await getPages();
+  await Promise.all(pages.map((page, i) => 
+    takeScreenshot(page, `${i}-error-screenshot`)
+  ));
+  await closeBrowser();
+
   throw e;
 }
 
 async function scrapeWfPendingTransactions(): Promise<TransactionsByAccount> {
-  browser = await puppeteer.launch({
-    headless: true,
-    defaultViewport: null,
-    args: [
-      '--no-sandbox',
-    ]
-  });
-  const page = await browser.newPage();
+  const page = await createPage();
   
   await login(page);
   const transactions = await getPendingTransactions(page);
 
-  await browser.close();
-  browser = null;
+  await closeBrowser();
   return transactions;
 }
