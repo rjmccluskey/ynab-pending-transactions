@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer';
-import { config } from '../config';
+import { config, NodeEnv } from '../config';
 import { storeBuffer } from '../storage';
 
 let tracedPage: Page|null = null;
@@ -11,8 +11,13 @@ export async function startTracing(page: Page): Promise<void> {
 
   tracedPage = page;
 
+  let traceFilename = 'trace.json';
+  if (config.nodeEnv === NodeEnv.prod) {
+    traceFilename = `/tmp/${traceFilename}`;
+  }
+
   return page.tracing.start({
-    path: 'trace.json',
+    path: traceFilename,
     screenshots: true
   });
 }
