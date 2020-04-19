@@ -7,6 +7,7 @@ export async function startTracing(page: Page): Promise<void> {
   await Promise.all([
     startBrowserTracing(page),
     startConsoleTracing(page),
+    startRequestTracing(page),
   ]);
 }
 
@@ -14,6 +15,7 @@ export async function stopTracing(): Promise<void> {
   await Promise.all([
     stopBrowserTracing(),
     stopConsoleTracing(),
+    stopRequestTracing(),
   ]);
 }
 
@@ -60,5 +62,40 @@ async function stopConsoleTracing(): Promise<void> {
   if (buffer) {
     const date = new Date().toISOString();
     await storeBuffer(buffer, config.debugBucketName, `${date}-console.log`);
+  }
+}
+
+async function startRequestTracing(page: Page): Promise<void> {
+  // Clear out the file if it already exists
+  fs.writeFileSync(config.requestTraceFilePath, '');
+
+  page.on('response', async response => {
+    if (response.ok()) {
+      return;
+    }
+
+    const message = `
+URL: ${response.url()}
+STATUS: ${response.status()} ${response.statusText()}
+
+BODY:
+${response.status() >= 400 ? await response.text() : ''}
+
+******************************
+
+`;
+    fs.appendFileSync(config.requestTraceFilePath, message);
+  });
+}
+
+async function stopRequestTracing(): Promise<void> {
+  if (!config.debugBucketName) {
+    return;
+  }
+
+  const buffer = fs.readFileSync(config.requestTraceFilePath);
+  if (buffer) {
+    const date = new Date().toISOString();
+    await storeBuffer(buffer, config.debugBucketName, `${date}-request.log`);
   }
 }

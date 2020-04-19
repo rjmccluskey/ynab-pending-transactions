@@ -3,3 +3,4 @@ dist
 .env
 trace.json
 console.log
+request.log

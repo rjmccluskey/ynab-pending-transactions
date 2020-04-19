@@ -26,6 +26,7 @@ export interface Config {
   debugBucketName: string|null;
   browserTraceFilePath: string;
   consoleTraceFilePath: string;
+  requestTraceFilePath: string;
 }
 
 export const config: Config = {
@@ -39,4 +40,5 @@ export const config: Config = {
   debugBucketName: getEnvVar('DEBUG_BUCKET_NAME', null),
   browserTraceFilePath: getEnvVar('BROWSER_TRACE_FILE_PATH', 'trace.json'),
   consoleTraceFilePath: getEnvVar('CONSOLE_TRACE_FILE_PATH', 'console.log'),
+  requestTraceFilePath: getEnvVar('REQUEST_TRACE_FILE_PATH', 'request.log'),
 };
