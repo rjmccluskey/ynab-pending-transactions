@@ -4,6 +4,10 @@ import { storeBuffer } from '../storage';
 import * as fs from 'fs';
 
 export async function startTracing(page: Page): Promise<void> {
+  if (!config.useTracing) {
+    return;
+  }
+
   await Promise.all([
     startBrowserTracing(page),
     startConsoleTracing(page),
@@ -12,6 +16,10 @@ export async function startTracing(page: Page): Promise<void> {
 }
 
 export async function stopTracing(): Promise<void> {
+  if (!config.useTracing) {
+    return;
+  }
+
   await Promise.all([
     stopBrowserTracing(),
     stopConsoleTracing(),
@@ -22,7 +30,7 @@ export async function stopTracing(): Promise<void> {
 let tracedPage: Page|null = null;
 
 async function startBrowserTracing(page: Page): Promise<void> {
-  if (!config.useTracing || tracedPage) {
+  if (tracedPage) {
     return;
   }
 
