@@ -27,6 +27,10 @@ export interface Config {
   browserTraceFilePath: string;
   consoleTraceFilePath: string;
   requestTraceFilePath: string;
+  plaidClientId: string;
+  plaidSecret: string;
+  plaidPublicKey: string;
+  plaidAccessToken: string;
 }
 
 export const config: Config = {
@@ -41,4 +45,8 @@ export const config: Config = {
   browserTraceFilePath: getEnvVar('BROWSER_TRACE_FILE_PATH', 'trace.json'),
   consoleTraceFilePath: getEnvVar('CONSOLE_TRACE_FILE_PATH', 'console.log'),
   requestTraceFilePath: getEnvVar('REQUEST_TRACE_FILE_PATH', 'request.log'),
+  plaidClientId: getEnvVar('PLAID_CLIENT_ID'),
+  plaidSecret: getEnvVar('PLAID_SECRET'),
+  plaidPublicKey: getEnvVar('PLAID_PUBLIC_KEY'),
+  plaidAccessToken: getEnvVar('PLAID_ACCESS_TOKEN'),
 };
