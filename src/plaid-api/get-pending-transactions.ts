@@ -51,16 +51,15 @@ function getAccountNameById(accounts: plaid.Account[], accountId: string): strin
 
 function mapPlaidToTransaction(plaidTransaction: plaid.Transaction): Transaction {
   return new Transaction(
-    getMilliunitAmount(plaidTransaction.amount),
+    getMilliunitAmount(plaidTransaction.amount as number),
     plaidTransaction.date,
     plaidTransaction.name || 'unknown'
   );
 }
 
-function getMilliunitAmount(floatAmount: number|null): number {
-  floatAmount = floatAmount || 0;
-  const milliunitString = floatAmount.toString().replace(/[^\d]/g, '') + '0';
-  return parseInt(milliunitString, 10) * -1;
+export function getMilliunitAmount(floatAmount: number): number {
+  const milliunitAmount = floatAmount * 1000;
+  return Math.round(milliunitAmount) * -1;
 }
 
 function amountIsValid(plaidTransaction: plaid.Transaction): boolean {
