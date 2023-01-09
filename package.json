@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^4.7.0",
-    "luxon": "^1.23.0",
+    "luxon": "^2.5.2",
     "plaid": "^4.11.0",
     "ynab": "^1.17.0"
   },
